@@ -470,18 +470,30 @@ var otterwiki_editor = {
         cm_editor.focus();
     },
     footnote: function() {
-        if (otterwiki_editor._getSelectedLines().length > 1) {
-            return;
-            // TODO: If multiple lines are selected, just consider the last one to add the foot note to
+        const startChar = "[^";
+        const endChar = "]";
+
+        let selectedLines = otterwiki_editor._getSelectedLines();
+        if (selectedLines.length > 1) {
+            // If multiple lines are selected, use the last one
+            otterwiki_editor._setSelectedLines(selectedLines.slice(selectedLines.length - 1));
+            selectedLines = otterwiki_editor._getSelectedLines();
         }
 
-        // TODO
-        /*
-        - If nothing is selected, insert [^#] and select the #
-        - If there is a selection, insert [^ before the selection, and ] after the selection
+        const selectedText = cm_editor.getSelection();
+        let newLine = startChar + "#" + endChar;
 
-        In all cases, write the same footnote to the end of the editor, directly after other footnotes
-        */
+        if (selectedText) {
+            const lineContent = cm_editor.getLine(selectedLines[0]);
+            const startIndex = lineContent.indexOf(selectedText);
+            const endIndex = startIndex + selectedText.length;
+
+            newLine = lineContent.slice(0, startIndex) + startChar + selectedText + endChar + lineContent.slice(endIndex);
+        }
+
+        otterwiki_editor._setLine(selectedLines[0], newLine);
+        // TODO: Update text selection so the content of the footnote is selected
+        // TODO: Write the same footnote to the end of the editor
     },
     _findNextOccurenceLine: function(lineContent) {
         // Find the next line starting AFTER the current selection that matches lineContent
